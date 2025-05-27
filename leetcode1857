@@ -1,0 +1,72 @@
+1857. Largest Color Value in a Directed Graph
+Hint
+There is a directed graph of n colored nodes and m edges. The nodes are numbered from 0 to n - 1.
+
+You are given a string colors where colors[i] is a lowercase English letter representing the color of the ith node in this graph (0-indexed). You are also given a 2D array edges where edges[j] = [aj, bj] indicates that there is a directed edge from node aj to node bj.
+
+A valid path in the graph is a sequence of nodes x1 -> x2 -> x3 -> ... -> xk such that there is a directed edge from xi to xi+1 for every 1 <= i < k. The color value of the path is the number of nodes that are colored the most frequently occurring color along that path.
+
+Return the largest color value of any valid path in the given graph, or -1 if the graph contains a cycle.
+Example 1:
+Input: colors = "abaca", edges = [[0,1],[0,2],[2,3],[3,4]]
+Output: 3
+Explanation: The path 0 -> 2 -> 3 -> 4 contains 3 nodes that are colored "a" (red in the above image).
+Example 2:
+Input: colors = "a", edges = [[0,0]]
+Output: -1
+Explanation: There is a cycle from 0 to 0.
+Constraints:
+n == colors.length
+m == edges.length
+1 <= n <= 105
+0 <= m <= 105
+colors consists of lowercase English letters.
+0 <= aj, bj < n
+===========================================================================================================================================================================================
+python3:
+from typing import List
+from collections import defaultdict
+
+class Solution:
+    def largestPathValue(self, colors: str, edges: List[List[int]]) -> int:
+        n = len(colors)
+        adj = defaultdict(list)
+        for src, dst in edges:
+            adj[src].append(dst)
+
+        visit = set()  
+        path = set()   
+        count = [[0] * 26 for _ in range(n)]  
+        res = 0
+        has_cycle = False
+
+        def dfs(node):
+            nonlocal has_cycle
+            if node in path:
+                has_cycle = True
+                return
+            if node in visit:
+                return
+
+            path.add(node)
+            for nei in adj[node]:
+                dfs(nei)
+                if has_cycle:
+                    return
+                for c in range(26):
+                    count[node][c] = max(count[node][c], count[nei][c])
+            path.remove(node)
+            visit.add(node)
+
+           
+            color_idx = ord(colors[node]) - ord('a')
+            count[node][color_idx] += 1
+
+        for i in range(n):
+            if i not in visit:
+                dfs(i)
+                if has_cycle:
+                    return -1
+                res = max(res, max(count[i]))
+
+        return res
